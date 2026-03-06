@@ -5,7 +5,10 @@
 """
 
 import argparse
+import io
 import requests
+import numpy as np
+import cv2
 
 
 def send_image(server_url: str, camera_id: str, image_path: str):
