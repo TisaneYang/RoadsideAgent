@@ -1,0 +1,49 @@
+# 摄像头配置文件
+# 定义路侧摄像头的位姿、内参和相互关系
+
+cameras:
+  # 摄像头1：路口东侧
+  - id: "camera_1"
+    name: "路口东侧摄像头"
+    location:
+      x: 0.0      # 世界坐标系X位置（米）
+      y: 10.0     # 世界坐标系Y位置（米）
+      z: 5.0      # 世界坐标系Z位置（米，高度）
+    rotation:
+      pitch: -15.0  # 俯仰角（度）
+      yaw: -90.0    # 航向角（度）
+      roll: 0.0     # 翻滚角（度）
+    intrinsics:
+      fx: 1000.0    # X方向焦距
+      fy: 1000.0    # Y方向焦距
+      cx: 960.0     # 主点X坐标
+      cy: 540.0     # 主点Y坐标
+    image_size:
+      width: 1920
+      height: 1080
+
+  # 摄像头2：路口西侧
+  - id: "camera_2"
+    name: "路口西侧摄像头"
+    location:
+      x: 0.0
+      y: -10.0
+      z: 5.0
+    rotation:
+      pitch: -15.0
+      yaw: 90.0
+      roll: 0.0
+    intrinsics:
+      fx: 1000.0
+      fy: 1000.0
+      cx: 960.0
+      cy: 540.0
+    image_size:
+      width: 1920
+      height: 1080
+
+# 摄像头之间的关系描述
+camera_relationships:
+  - cameras: ["camera_1", "camera_2"]
+    type: "back_to_back"
+    description: "两个摄像头背靠背设置在路口中心，分别覆盖东西两个方向的交通"
