@@ -43,6 +43,12 @@ image_processing:
   # JPEG质量（1-100）
   jpeg_quality: 85
 
+  # 是否保存输入给模型的图像
+  save_input_images: false
+
+  # 图像保存目录
+  input_images_dir: "debug/input_images/"
+
 # 风险评估配置
 risk_assessment:
   # 高风险关键词

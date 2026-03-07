@@ -11,6 +11,8 @@ LLM接口模块
 import base64
 import io
 import json
+import os
+from datetime import datetime
 from typing import Dict, List, Optional, Any
 from PIL import Image
 import numpy as np
@@ -19,7 +21,7 @@ import numpy as np
 class LLMInterface:
     """多模态LLM接口"""
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, image_config: Dict = None):
         """
         初始化LLM接口
 
@@ -30,12 +32,25 @@ class LLMInterface:
                 - api_key: API密钥
                 - max_tokens: 最大生成token数
                 - temperature: 温度参数
+            image_config: 图像处理配置字典，包含：
+                - save_input_images: 是否保存输入图像
+                - input_images_dir: 图像保存目录
         """
         self.provider = config.get('provider', 'openai')
         self.model = config.get('model', 'gpt-4-vision-preview')
         self.api_key = config.get('api_key', '')
         self.max_tokens = config.get('max_tokens', 2000)
         self.temperature = config.get('temperature', 0.7)
+
+        # 图像保存配置
+        self.image_config = image_config or {}
+        self.save_input_images = self.image_config.get('save_input_images', False)
+        self.input_images_dir = self.image_config.get('input_images_dir', 'debug/input_images/')
+
+        # 如果启用保存，创建目录
+        if self.save_input_images:
+            os.makedirs(self.input_images_dir, exist_ok=True)
+            print(f"图像保存已启用，保存路径: {self.input_images_dir}")
 
         # 加载系统提示词
         self.system_prompt = self._load_system_prompt()
@@ -71,6 +86,35 @@ class LLMInterface:
                 raise ImportError("请安装anthropic库: pip install anthropic")
         else:
             raise ValueError(f"不支持的provider: {self.provider}")
+
+    def _save_input_image(self, image: np.ndarray, camera_id: str = None):
+        """
+        保存输入给模型的图像
+
+        Args:
+            image: numpy图像数组 (H, W, 3)
+            camera_id: 摄像头ID（可选）
+        """
+        if not self.save_input_images:
+            return
+
+        try:
+            # 生成文件名：时间戳_摄像头ID.jpg
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            if camera_id:
+                filename = f"{timestamp}_{camera_id}.jpg"
+            else:
+                filename = f"{timestamp}.jpg"
+
+            filepath = os.path.join(self.input_images_dir, filename)
+
+            # 转换为PIL Image并保存
+            pil_image = Image.fromarray(image)
+            pil_image.save(filepath, format='JPEG', quality=95)
+
+            print(f"✓ 已保存输入图像: {filepath}")
+        except Exception as e:
+            print(f"✗ 保存输入图像失败: {e}")
 
     def _encode_image(self, image: np.ndarray) -> str:
         """
@@ -199,6 +243,9 @@ class LLMInterface:
                 image_with_bbox = camera_coverage['projections'][first_camera]['image_with_bbox']
 
                 if image_with_bbox is not None:
+                    # 保存输入图像（如果启用）
+                    self._save_input_image(image_with_bbox, first_camera)
+
                     base64_image = self._encode_image(image_with_bbox)
 
                     messages.append({
@@ -248,6 +295,9 @@ class LLMInterface:
                 image_with_bbox = camera_coverage['projections'][first_camera]['image_with_bbox']
 
                 if image_with_bbox is not None:
+                    # 保存输入图像（如果启用）
+                    self._save_input_image(image_with_bbox, first_camera)
+
                     base64_image = self._encode_image(image_with_bbox)
                     content_parts.insert(0, {
                         "type": "image",

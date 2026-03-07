@@ -33,7 +33,7 @@ class RoadsideAgent:
         # 初始化各模块
         self.camera_manager = CameraManager(camera_config_path)
         self.input_processor = InputProcessor()
-        self.llm_interface = LLMInterface(self.config['llm'])
+        self.llm_interface = LLMInterface(self.config['llm'], self.config.get('image_processing', {}))
 
         print(f"路侧智能体初始化完成")
         print(f"- 摄像头数量: {len(self.camera_manager.get_all_camera_ids())}")
@@ -239,7 +239,7 @@ class RoadsideAgent:
         print("重新加载配置...")
         self.config = self._load_agent_config()
         self.camera_manager.reload_config()
-        self.llm_interface = LLMInterface(self.config['llm'])
+        self.llm_interface = LLMInterface(self.config['llm'], self.config.get('image_processing', {}))
         print("配置重新加载完成")
 
     def analyze_batch(self, scenarios: list) -> list:
